@@ -1,1 +1,42 @@
-// TODO
+.container {
+  width: 100%;
+  max-width: 700px;
+  margin: 5rem auto;
+}
+
+.content {
+  margin-top: 4rem;
+}
+
+.posts {
+  width: 100%;
+
+  a {
+    display: block;
+
+    strong {
+      font-size: 1.75rem;
+      color: var(--heading);
+    }
+
+    p {
+      margin-top: 0.5rem;
+      font-size: 1.125rem;
+    }
+
+    & + a {
+      margin-top: 3rem;
+    }
+  }
+}
+
+.loadMore {
+  display: block;
+  margin-top: 4rem;
+
+  a {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--highlight);
+  }
+}
