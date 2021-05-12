@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import Prismic from '@prismicio/client';
 import { GetStaticProps } from 'next';
 import { FiUser, FiCalendar } from 'react-icons/fi';
@@ -26,9 +27,13 @@ interface PostPagination {
 
 interface HomeProps {
   postsPagination: PostPagination;
+  preview: boolean;
 }
 
-export default function Home({ postsPagination }: HomeProps): JSX.Element {
+export default function Home({
+  postsPagination,
+  preview,
+}: HomeProps): JSX.Element {
   const { results, next_page } = postsPagination;
 
   const [posts, setPosts] = useState(results);
@@ -54,50 +59,69 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
   }
 
   return (
-    <div className={styles.container}>
-      <img src="/logo.svg" alt="logo" />
+    <>
+      <Head>
+        <title>Home | spacetraveling</title>
+      </Head>
 
-      <main className={styles.content}>
-        <div className={styles.posts}>
-          {posts.map(({ uid, first_publication_date, data }) => (
-            <Link key={uid} href={`/post/${uid}`}>
-              <a>
-                <strong>{data.title}</strong>
-                <p>{data.subtitle}</p>
-                <div className={commonStyles.info}>
-                  <time>
-                    <FiCalendar size={20} />
-                    {formatDate(first_publication_date)}
-                  </time>
-                  <span>
-                    <FiUser size={20} />
-                    {data.author}
-                  </span>
-                </div>
-              </a>
-            </Link>
-          ))}
-        </div>
+      <div className={styles.container}>
+        <img src="/logo.svg" alt="logo" />
 
-        {nextPage && (
-          <div className={styles.loadMore}>
-            <button type="button" onClick={handleLoadMore}>
-              Carregar mais posts
-            </button>
+        <main className={styles.content}>
+          <div className={styles.posts}>
+            {posts.map(({ uid, first_publication_date, data }) => (
+              <Link key={uid} href={`/post/${uid}`}>
+                <a>
+                  <strong>{data.title}</strong>
+                  <p>{data.subtitle}</p>
+                  <div className={commonStyles.info}>
+                    <time>
+                      <FiCalendar size={20} />
+                      {formatDate(first_publication_date)}
+                    </time>
+                    <span>
+                      <FiUser size={20} />
+                      {data.author}
+                    </span>
+                  </div>
+                </a>
+              </Link>
+            ))}
           </div>
-        )}
-      </main>
-    </div>
+
+          {nextPage && (
+            <div className={styles.loadMore}>
+              <button type="button" onClick={handleLoadMore}>
+                Carregar mais posts
+              </button>
+            </div>
+          )}
+
+          {preview && (
+            <aside className={commonStyles.exitPreviewMode}>
+              <Link href="/api/exit-preview">
+                <a>Sair do modo Preview</a>
+              </Link>
+            </aside>
+          )}
+        </main>
+      </div>
+    </>
   );
 }
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async ({
+  preview = false,
+  previewData,
+}) => {
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
     {
       pageSize: 5,
       fetch: ['posts.title', 'posts.author', 'posts.subtitle'],
+      orderings: '[document.first_publication_date desc]',
+      ref: previewData?.ref ?? null,
     }
   );
 
@@ -106,7 +130,7 @@ export const getStaticProps: GetStaticProps = async () => {
   const posts = postsResponse.results.map(post => {
     return {
       uid: post.uid,
-      first_publication_date: String(post.first_publication_date),
+      first_publication_date: post.first_publication_date,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
@@ -121,6 +145,7 @@ export const getStaticProps: GetStaticProps = async () => {
         next_page,
         results: posts,
       },
+      preview,
     },
     revalidate: 60 * 30, // 30 minutes
   };

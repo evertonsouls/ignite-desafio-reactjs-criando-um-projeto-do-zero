@@ -34,7 +34,9 @@
   display: block;
   margin-top: 4rem;
 
-  a {
+  button {
+    border: 0;
+    background: transparent;
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--highlight);
